@@ -1,0 +1,69 @@
+[
+  {
+    "id": "sardine", "name": "沙丁鱼", "texture": "ph_fish_small", "size": "small",
+    "weight": 1, "hp": 1, "sellPrice": 15, "behavior": "school",
+    "speed": 60, "fleeSpeed": 140, "aggroRadius": 0, "fleeRadius": 90, "damage": 0,
+    "depthBand": [0, 60], "spawnWeight": 12
+  },
+  {
+    "id": "clownfish", "name": "小丑鱼", "texture": "ph_fish_small", "size": "small",
+    "weight": 1, "hp": 1, "sellPrice": 25, "behavior": "wander",
+    "speed": 50, "fleeSpeed": 130, "aggroRadius": 0, "fleeRadius": 80, "damage": 0,
+    "depthBand": [0, 60], "spawnWeight": 8
+  },
+  {
+    "id": "butterflyfish", "name": "红海蝴蝶鱼", "texture": "ph_fish_small", "size": "small",
+    "weight": 1, "hp": 1, "sellPrice": 35, "behavior": "wander",
+    "speed": 55, "fleeSpeed": 150, "aggroRadius": 0, "fleeRadius": 100, "damage": 0,
+    "depthBand": [10, 70], "spawnWeight": 6
+  },
+  {
+    "id": "seabream", "name": "鲷鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 3, "hp": 2, "sellPrice": 60, "behavior": "wander",
+    "speed": 65, "fleeSpeed": 160, "aggroRadius": 0, "fleeRadius": 110, "damage": 0,
+    "depthBand": [50, 130], "spawnWeight": 8,
+    "struggle": { "duration": 3.0, "tapsRequired": 6 }
+  },
+  {
+    "id": "grouper", "name": "石斑鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 4, "hp": 3, "sellPrice": 90, "behavior": "flee_only",
+    "speed": 45, "fleeSpeed": 150, "aggroRadius": 0, "fleeRadius": 90, "damage": 0,
+    "depthBand": [60, 130], "spawnWeight": 6,
+    "struggle": { "duration": 3.5, "tapsRequired": 8 }
+  },
+  {
+    "id": "lionfish", "name": "狮子鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 2, "hp": 2, "sellPrice": 110, "behavior": "aggressive",
+    "speed": 40, "fleeSpeed": 120, "aggroRadius": 70, "fleeRadius": 0, "damage": 8,
+    "depthBand": [50, 130], "spawnWeight": 4,
+    "struggle": { "duration": 3.0, "tapsRequired": 7 }
+  },
+  {
+    "id": "moray", "name": "海鳝", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 3, "hp": 3, "sellPrice": 80, "behavior": "aggressive",
+    "speed": 35, "fleeSpeed": 140, "aggroRadius": 90, "fleeRadius": 0, "damage": 10,
+    "depthBand": [80, 160], "spawnWeight": 5,
+    "struggle": { "duration": 3.5, "tapsRequired": 8 }
+  },
+  {
+    "id": "tuna", "name": "蓝鳍金枪鱼", "texture": "ph_fish_large", "size": "large",
+    "weight": 8, "hp": 5, "sellPrice": 260, "behavior": "flee_only",
+    "speed": 90, "fleeSpeed": 220, "aggroRadius": 0, "fleeRadius": 130, "damage": 0,
+    "depthBand": [130, 200], "spawnWeight": 5,
+    "struggle": { "duration": 4.0, "tapsRequired": 12 }
+  },
+  {
+    "id": "hammerhead", "name": "锤头鲨", "texture": "ph_fish_large", "size": "large",
+    "weight": 12, "hp": 8, "sellPrice": 400, "behavior": "aggressive",
+    "speed": 70, "fleeSpeed": 180, "aggroRadius": 140, "fleeRadius": 0, "damage": 18,
+    "depthBand": [130, 200], "spawnWeight": 3,
+    "struggle": { "duration": 5.0, "tapsRequired": 16 }
+  },
+  {
+    "id": "sea_turtle", "name": "绿海龟", "texture": "ph_fish_large", "size": "large",
+    "weight": 0, "hp": 999, "sellPrice": 0, "behavior": "wander",
+    "speed": 30, "fleeSpeed": 60, "aggroRadius": 0, "fleeRadius": 0, "damage": 0,
+    "depthBand": [20, 120], "spawnWeight": 1,
+    "protected": true
+  }
+]

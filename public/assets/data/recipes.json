@@ -1,0 +1,47 @@
+[
+  {
+    "id": "sardine_skewer", "name": "烤沙丁鱼串",
+    "ingredients": [{ "fishId": "sardine", "count": 2 }],
+    "price": 30, "servings": 2, "unlock": { "type": "default" }
+  },
+  {
+    "id": "clownfish_soup", "name": "海葵鱼清汤",
+    "ingredients": [{ "fishId": "clownfish", "count": 1 }],
+    "price": 40, "servings": 2, "unlock": { "type": "default" }
+  },
+  {
+    "id": "butterfly_sashimi", "name": "蝴蝶鱼刺身",
+    "ingredients": [{ "fishId": "butterflyfish", "count": 1 }],
+    "price": 55, "servings": 2, "unlock": { "type": "firstCatch", "fishId": "butterflyfish" }
+  },
+  {
+    "id": "bream_grill", "name": "炭烤鲷鱼",
+    "ingredients": [{ "fishId": "seabream", "count": 1 }],
+    "price": 85, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "seabream" }
+  },
+  {
+    "id": "grouper_stew", "name": "石斑鱼炖锅",
+    "ingredients": [{ "fishId": "grouper", "count": 1 }],
+    "price": 120, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "grouper" }
+  },
+  {
+    "id": "lionfish_fry", "name": "香炸狮子鱼",
+    "ingredients": [{ "fishId": "lionfish", "count": 1 }],
+    "price": 150, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "lionfish" }
+  },
+  {
+    "id": "moray_teriyaki", "name": "照烧海鳝",
+    "ingredients": [{ "fishId": "moray", "count": 1 }],
+    "price": 130, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "moray" }
+  },
+  {
+    "id": "tuna_sashimi", "name": "蓝鳍金枪鱼刺身",
+    "ingredients": [{ "fishId": "tuna", "count": 1 }],
+    "price": 320, "servings": 4, "unlock": { "type": "firstCatch", "fishId": "tuna" }
+  },
+  {
+    "id": "shark_fin_ramen", "name": "鲨鱼汤面",
+    "ingredients": [{ "fishId": "hammerhead", "count": 1 }],
+    "price": 500, "servings": 5, "unlock": { "type": "firstCatch", "fishId": "hammerhead" }
+  }
+]

@@ -1,0 +1,13 @@
+[
+  { "id": "tank_lv1", "slot": "tank", "name": "小型氧气瓶", "cost": 0, "effects": { "oxygenMax": 60 } },
+  { "id": "tank_lv2", "slot": "tank", "name": "中型氧气瓶", "cost": 300, "effects": { "oxygenMax": 100 }, "requires": "tank_lv1" },
+  { "id": "tank_lv3", "slot": "tank", "name": "大型氧气瓶", "cost": 800, "effects": { "oxygenMax": 160 }, "requires": "tank_lv2" },
+
+  { "id": "cargo_lv1", "slot": "cargo", "name": "标准渔网袋", "cost": 0, "effects": { "weightMax": 12 } },
+  { "id": "cargo_lv2", "slot": "cargo", "name": "加固渔网袋", "cost": 250, "effects": { "weightMax": 22 }, "requires": "cargo_lv1" },
+  { "id": "cargo_lv3", "slot": "cargo", "name": "深潜货舱", "cost": 700, "effects": { "weightMax": 36 }, "requires": "cargo_lv2" },
+
+  { "id": "harpoon_lv1", "slot": "harpoon", "name": "旧鱼叉", "cost": 0, "effects": { "damage": 1, "chargeRate": 1.0 } },
+  { "id": "harpoon_lv2", "slot": "harpoon", "name": "精钢鱼叉", "cost": 350, "effects": { "damage": 2, "chargeRate": 1.3 }, "requires": "harpoon_lv1" },
+  { "id": "harpoon_lv3", "slot": "harpoon", "name": "气动鱼叉炮", "cost": 900, "effects": { "damage": 4, "chargeRate": 1.6 }, "requires": "harpoon_lv2" }
+]

@@ -1,0 +1,39 @@
+{
+  "id": "red_sea",
+  "name": "埃及红海",
+  "waterColor": "#1a6a8e",
+  "ambientDarkenPerMeter": 0.004,
+  "maxDepth": 200,
+  "depthBands": [
+    {
+      "range": [0, 60],
+      "oxygenDrainMul": 1.0,
+      "spawns": [
+        { "fishId": "sardine", "weight": 12 },
+        { "fishId": "clownfish", "weight": 8 },
+        { "fishId": "butterflyfish", "weight": 6 },
+        { "fishId": "sea_turtle", "weight": 1 }
+      ]
+    },
+    {
+      "range": [60, 130],
+      "oxygenDrainMul": 1.4,
+      "spawns": [
+        { "fishId": "seabream", "weight": 8 },
+        { "fishId": "grouper", "weight": 6 },
+        { "fishId": "lionfish", "weight": 4 },
+        { "fishId": "moray", "weight": 5 },
+        { "fishId": "sea_turtle", "weight": 1 }
+      ]
+    },
+    {
+      "range": [130, 200],
+      "oxygenDrainMul": 2.0,
+      "spawns": [
+        { "fishId": "tuna", "weight": 5 },
+        { "fishId": "hammerhead", "weight": 3 },
+        { "fishId": "moray", "weight": 3 }
+      ]
+    }
+  ]
+}
