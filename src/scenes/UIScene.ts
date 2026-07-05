@@ -29,10 +29,14 @@ export class UIScene extends Phaser.Scene {
     this.moneyText = this.add.text(8, 44, `金币 ${GameState.money}`, style);
 
     const onDepth = (m: number) => this.depthText.setText(`深度 ${m}m`);
-    const onOxygen = (v: { current: number; max: number }) =>
+    const onOxygen = (v: { current: number; max: number }) => {
       this.oxygenText.setText(`氧气 ${Math.ceil(v.current)}/${v.max}`);
-    const onWeight = (v: { current: number; max: number }) =>
-      this.weightText.setText(`负重 ${v.current}/${v.max}`);
+      this.oxygenText.setColor(v.current / v.max < 0.25 ? '#ff8f8f' : '#e8f4f8');
+    };
+    const onWeight = (v: { current: number; max: number }) => {
+      this.weightText.setText(`负重 ${v.current}/${v.max}${v.current > v.max ? ' 超重!' : ''}`);
+      this.weightText.setColor(v.current > v.max ? '#ffd97d' : '#e8f4f8');
+    };
     const onMoney = (m: number) => this.moneyText.setText(`金币 ${m}`);
 
     EventBus.on(Events.DEPTH_CHANGED, onDepth);

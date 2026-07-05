@@ -37,6 +37,7 @@ export class Player {
   }
 
   setOverweight(value: boolean): void {
+    if (this.overweight === value) return;
     this.overweight = value;
     const max = value ? Player.MAX_VEL_OVERWEIGHT : Player.MAX_VEL;
     this.sprite.setMaxVelocity(max, max);

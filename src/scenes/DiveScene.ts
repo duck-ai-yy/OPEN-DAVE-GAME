@@ -11,6 +11,8 @@ import { Harpoon } from '../dive/Harpoon';
 import { ParallaxBackground } from '../dive/ParallaxBackground';
 import { Player } from '../dive/Player';
 import { Terrain } from '../dive/Terrain';
+import { InventorySystem } from '../dive/systems/InventorySystem';
+import { OxygenSystem } from '../dive/systems/OxygenSystem';
 
 /** 玩家浅于此深度（px）时可上浮结束下潜 */
 const SURFACE_EXIT_Y = 30;
@@ -36,6 +38,9 @@ export class DiveScene extends Phaser.Scene {
   private bubbles!: Phaser.GameObjects.Particles.ParticleEmitter;
   private spawner!: FishSpawner;
   private harpoon!: Harpoon;
+  private oxygen!: OxygenSystem;
+  private inventory!: InventorySystem;
+  private rescueActive = false;
 
   constructor() {
     super('Dive');
@@ -87,21 +92,33 @@ export class DiveScene extends Phaser.Scene {
 
     this.spawner = new FishSpawner(this, this.region);
     this.harpoon = new Harpoon(this, player);
+    this.rescueActive = false;
 
-    // 捕获入包 + 飘字反馈；重量上限由 M3 InventorySystem 接管
+    // 装备数值聚合（EquipmentStats 模块合入后替换为统一实现）
+    const stats = this.aggregateStats();
+    Harpoon.damage = stats.harpoonDamage;
+    Harpoon.chargeRate = stats.chargeRate;
+    this.oxygen = new OxygenSystem(stats.oxygenMax);
+    this.inventory = new InventorySystem(stats.weightMax);
+
+    // 渔获飘字（入包由 InventorySystem 监听同一事件处理）
     const onCaught = ({ fishId }: { fishId: string }) => {
       const def = DataRegistry.getFish(fishId);
-      GameState.addCatch(fishId);
       this.floatText(`+ ${def.name}`, '#8bd3dd');
     };
-    const onDamaged = () => {
+    const onDamaged = ({ amount }: { amount: number }) => {
       this.cameras.main.shake(120, 0.004);
+      this.oxygen.damage(amount);
     };
+    const onRescued = () => this.showRescuePanel();
     EventBus.on(Events.FISH_CAUGHT, onCaught);
     EventBus.on(Events.PLAYER_DAMAGED, onDamaged);
+    EventBus.on(Events.PLAYER_RESCUED, onRescued);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       EventBus.off(Events.FISH_CAUGHT, onCaught);
       EventBus.off(Events.PLAYER_DAMAGED, onDamaged);
+      EventBus.off(Events.PLAYER_RESCUED, onRescued);
+      this.inventory.dispose();
     });
 
     this.surfacePrompt = this.add
@@ -140,13 +157,81 @@ export class DiveScene extends Phaser.Scene {
     this.tweens.add({ targets: t, y: 90, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
   }
 
+  /** 装备数值聚合：每 slot 取已购最高级；未购买时用 lv1 基础值 */
+  private aggregateStats(): { oxygenMax: number; weightMax: number; harpoonDamage: number; chargeRate: number } {
+    const stats = { oxygenMax: 60, weightMax: 12, harpoonDamage: 1, chargeRate: 1.0 };
+    for (const id of GameState.upgrades) {
+      const eq = DataRegistry.getEquipment(id);
+      if (eq.effects.oxygenMax) stats.oxygenMax = Math.max(stats.oxygenMax, eq.effects.oxygenMax);
+      if (eq.effects.weightMax) stats.weightMax = Math.max(stats.weightMax, eq.effects.weightMax);
+      if (eq.effects.damage) stats.harpoonDamage = Math.max(stats.harpoonDamage, eq.effects.damage);
+      if (eq.effects.chargeRate) stats.chargeRate = Math.max(stats.chargeRate, eq.effects.chargeRate);
+    }
+    return stats;
+  }
+
+  /** 氧尽救援：暂停玩法，只能保留一件渔获 */
+  private showRescuePanel(): void {
+    if (this.rescueActive) return;
+    this.rescueActive = true;
+    this.physics.pause();
+
+    this.add
+      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x000814, 0.75)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(2000);
+    this.add
+      .text(GAME_WIDTH / 2, 70, '氧气耗尽！被救援船捞了上来', {
+        fontFamily: 'monospace', fontSize: '14px', color: '#ff8f8f',
+      })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(2001);
+
+    const distinct = [...new Set(this.inventory.catches)];
+    if (distinct.length === 0) {
+      this.rescueButton(120, '两手空空地回去…', () => this.finishRescue(null));
+      return;
+    }
+    this.add
+      .text(GAME_WIDTH / 2, 92, '只能保留一件渔获：', {
+        fontFamily: 'monospace', fontSize: '11px', color: '#e8f4f8',
+      })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(2001);
+    distinct.slice(0, 5).forEach((fishId, i) => {
+      const def = DataRegistry.getFish(fishId);
+      const count = this.inventory.catches.filter((c) => c === fishId).length;
+      this.rescueButton(118 + i * 26, `${def.name} ×${count} → 留 1 条`, () => this.finishRescue(fishId));
+    });
+  }
+
+  private rescueButton(y: number, label: string, onClick: () => void): void {
+    const btn = this.add
+      .text(GAME_WIDTH / 2, y, label, {
+        fontFamily: 'monospace', fontSize: '11px', color: '#8bd3dd',
+        backgroundColor: '#123047', padding: { x: 10, y: 4 },
+      })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(2001)
+      .setInteractive({ useHandCursor: true });
+    btn.on('pointerdown', onClick);
+  }
+
+  private finishRescue(keepFishId: string | null): void {
+    if (keepFishId) this.inventory.commitOne(keepFishId);
+    this.physics.resume();
+    EventBus.emit(Events.DIVE_ENDED);
+    this.scene.stop('UI');
+    this.scene.start('Surface');
+  }
+
   private endDive(): void {
+    this.inventory.commitAll();
     EventBus.emit(Events.DIVE_ENDED);
     this.scene.stop('UI');
     this.scene.start('Surface');
   }
 
   update(time: number, delta: number): void {
+    if (this.rescueActive) return;
     for (const p of this.players) p.update(this);
     this.cameraRig.update(this.players);
     this.parallax.update(this.cameras.main, time);
@@ -156,6 +241,14 @@ export class DiveScene extends Phaser.Scene {
     if (player0.frame) {
       this.harpoon.update(player0.frame, delta, this.spawner.fishes);
     }
+
+    // 氧气：深度带系数驱动消耗
+    const depthM = player0.y / PX_PER_METER;
+    const band = this.region.depthBands.find((b) => depthM >= b.range[0] && depthM < b.range[1]);
+    this.oxygen.update(delta, band?.oxygenDrainMul ?? 1);
+
+    // 超重减速
+    player0.setOverweight(this.inventory.overweight);
 
     // 水面出口：浅水区提示 + E 上浮
     const p0 = this.players[0];
