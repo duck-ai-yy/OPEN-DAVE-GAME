@@ -3,8 +3,11 @@ import { EventBus } from '../core/EventBus';
 import { Events, GAME_HEIGHT, GAME_WIDTH, PX_PER_METER } from '../core/types';
 import type { RegionDef } from '../core/types';
 import { DataRegistry } from '../data/DataRegistry';
+import { GameState } from '../core/GameState';
 import { KeyboardMouseSource } from '../input/KeyboardMouseSource';
 import { CameraRig } from '../dive/CameraRig';
+import { FishSpawner } from '../dive/FishSpawner';
+import { Harpoon } from '../dive/Harpoon';
 import { ParallaxBackground } from '../dive/ParallaxBackground';
 import { Player } from '../dive/Player';
 import { Terrain } from '../dive/Terrain';
@@ -31,6 +34,8 @@ export class DiveScene extends Phaser.Scene {
   private parallax!: ParallaxBackground;
   private surfacePrompt!: Phaser.GameObjects.Text;
   private bubbles!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private spawner!: FishSpawner;
+  private harpoon!: Harpoon;
 
   constructor() {
     super('Dive');
@@ -80,6 +85,25 @@ export class DiveScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1000);
 
+    this.spawner = new FishSpawner(this, this.region);
+    this.harpoon = new Harpoon(this, player);
+
+    // 捕获入包 + 飘字反馈；重量上限由 M3 InventorySystem 接管
+    const onCaught = ({ fishId }: { fishId: string }) => {
+      const def = DataRegistry.getFish(fishId);
+      GameState.addCatch(fishId);
+      this.floatText(`+ ${def.name}`, '#8bd3dd');
+    };
+    const onDamaged = () => {
+      this.cameras.main.shake(120, 0.004);
+    };
+    EventBus.on(Events.FISH_CAUGHT, onCaught);
+    EventBus.on(Events.PLAYER_DAMAGED, onDamaged);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      EventBus.off(Events.FISH_CAUGHT, onCaught);
+      EventBus.off(Events.PLAYER_DAMAGED, onDamaged);
+    });
+
     this.surfacePrompt = this.add
       .text(GAME_WIDTH / 2, 60, '按 E 上浮返回', {
         fontFamily: 'monospace',
@@ -95,6 +119,25 @@ export class DiveScene extends Phaser.Scene {
 
     // ESC 放弃本潜返回水面
     this.input.keyboard?.on('keydown-ESC', () => this.endDive());
+
+    // 仅开发模式：暴露场景给 e2e 脚本瞄准/断言
+    if (import.meta.env.DEV) {
+      (window as unknown as Record<string, unknown>).__dive = this;
+    }
+  }
+
+  /** 屏幕上方短暂飘字（捕获/提示通用） */
+  private floatText(msg: string, color: string): void {
+    const t = this.add
+      .text(GAME_WIDTH / 2, 110, msg, {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color,
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1002);
+    this.tweens.add({ targets: t, y: 90, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
   }
 
   private endDive(): void {
@@ -103,10 +146,16 @@ export class DiveScene extends Phaser.Scene {
     this.scene.start('Surface');
   }
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
     for (const p of this.players) p.update(this);
     this.cameraRig.update(this.players);
     this.parallax.update(this.cameras.main, time);
+
+    const player0 = this.players[0];
+    this.spawner.update(delta, this.cameras.main, player0.x, player0.y, time);
+    if (player0.frame) {
+      this.harpoon.update(player0.frame, delta, this.spawner.fishes);
+    }
 
     // 水面出口：浅水区提示 + E 上浮
     const p0 = this.players[0];

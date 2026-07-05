@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GameState } from './core/GameState';
 import { GAME_HEIGHT, GAME_WIDTH } from './core/types';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
@@ -27,3 +28,8 @@ new Phaser.Game({
   },
   scene: [BootScene, PreloadScene, SurfaceScene, DiveScene, RestaurantScene, UIScene],
 });
+
+// 仅开发模式：暴露全局状态给 e2e 断言
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__GameState = GameState;
+}
