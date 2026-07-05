@@ -26,6 +26,7 @@ export class Fish {
   private stateTimerMs = 0;
   private biteCooldownMs = 0;
   private bobPhase = Math.random() * Math.PI * 2;
+  private stunnedMs = 0;
 
   constructor(scene: Phaser.Scene, def: FishDef, x: number, y: number) {
     this.def = def;
@@ -48,9 +49,28 @@ export class Fish {
     return this.state !== 'caught' && this.sprite.active;
   }
 
+  /** 电击麻痹：冻结 FSM，速度衰减为 0，视觉泛黄 */
+  stun(ms: number): void {
+    if (this.state === 'caught') return;
+    this.stunnedMs = ms;
+    this.sprite.setTint(0xffe08a);
+  }
+
+  get stunned(): boolean {
+    return this.stunnedMs > 0;
+  }
+
   update(dtMs: number, playerX: number, playerY: number, timeMs: number): void {
     if (!this.alive) return;
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+
+    if (this.stunnedMs > 0) {
+      this.stunnedMs -= dtMs;
+      body.velocity.x = Phaser.Math.Linear(body.velocity.x, 0, 0.15);
+      body.velocity.y = Phaser.Math.Linear(body.velocity.y, 0, 0.15);
+      if (this.stunnedMs <= 0) this.sprite.clearTint();
+      return;
+    }
     const dx = this.x - playerX;
     const dy = this.y - playerY;
     const distSq = dx * dx + dy * dy;

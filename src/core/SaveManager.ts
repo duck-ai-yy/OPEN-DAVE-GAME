@@ -23,8 +23,9 @@ export const SaveManager = {
       if (!raw) return false;
       const data = JSON.parse(raw) as SaveData;
       if (data.version !== 1) return false;
-      // 多地域功能上线前的旧档没有该字段：补初始地域，版本号不动
+      // 功能上线前的旧档缺字段：补默认值，版本号不动
       if (!Array.isArray(data.unlockedRegions)) data.unlockedRegions = ['red_sea'];
+      if (typeof data.fragments !== 'object' || data.fragments === null) data.fragments = {};
       GameState.loadFrom(data);
       return true;
     } catch {

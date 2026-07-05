@@ -19,6 +19,7 @@
       "range": [60, 130],
       "oxygenDrainMul": 1.4,
       "spawns": [
+        { "fishId": "jellyfish", "weight": 5 },
         { "fishId": "seabream", "weight": 8 },
         { "fishId": "grouper", "weight": 6 },
         { "fishId": "lionfish", "weight": 4 },

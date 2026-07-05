@@ -1,4 +1,4 @@
-import type { EquipmentDef, FishDef, RecipeDef, RegionDef } from '../core/types';
+import type { EquipmentDef, FishDef, GadgetDef, RecipeDef, RegionDef } from '../core/types';
 
 /**
  * 数据表注册中心。PreloadScene 加载 JSON 后调用 init()，
@@ -9,17 +9,20 @@ class DataRegistryImpl {
   private equipment = new Map<string, EquipmentDef>();
   private recipes = new Map<string, RecipeDef>();
   private regions = new Map<string, RegionDef>();
+  private gadgets = new Map<string, GadgetDef>();
 
   init(data: {
     fish: FishDef[];
     equipment: EquipmentDef[];
     recipes: RecipeDef[];
     regions: RegionDef[];
+    gadgets?: GadgetDef[];
   }): void {
     this.fish = new Map(data.fish.map((f) => [f.id, f]));
     this.equipment = new Map(data.equipment.map((e) => [e.id, e]));
     this.recipes = new Map(data.recipes.map((r) => [r.id, r]));
     this.regions = new Map(data.regions.map((r) => [r.id, r]));
+    this.gadgets = new Map((data.gadgets ?? []).map((g) => [g.id, g]));
     this.validate();
   }
 
@@ -83,6 +86,16 @@ class DataRegistryImpl {
 
   allRegions(): RegionDef[] {
     return [...this.regions.values()];
+  }
+
+  getGadget(id: string): GadgetDef {
+    const def = this.gadgets.get(id);
+    if (!def) throw new Error(`未知合成道具 id: ${id}`);
+    return def;
+  }
+
+  allGadgets(): GadgetDef[] {
+    return [...this.gadgets.values()];
   }
 }
 

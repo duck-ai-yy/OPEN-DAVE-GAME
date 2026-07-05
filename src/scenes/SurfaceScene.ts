@@ -31,6 +31,7 @@ const EFFECT_LABELS: Record<keyof EquipmentDef['effects'], string> = {
 export class SurfaceScene extends Phaser.Scene {
   private moneyText!: Phaser.GameObjects.Text;
   private shopLayer?: Phaser.GameObjects.Container;
+  private craftLayer?: Phaser.GameObjects.Container;
   private regionLayer?: Phaser.GameObjects.Container;
 
   constructor() {
@@ -66,6 +67,82 @@ export class SurfaceScene extends Phaser.Scene {
     this.makeButton(230, '🔧 装备升级', () => {
       this.openShop();
     });
+    this.makeButton(270, '🧪 生物合成', () => {
+      this.openCraft();
+    });
+  }
+
+  // ---------- 生物合成弹层 ----------
+
+  /** 碎片→能力武器：进度可视 + 集齐可合成；已合成的显示持有态 */
+  private openCraft(): void {
+    this.craftLayer?.destroy(true);
+    this.craftLayer = this.add.container(0, 0).setDepth(10);
+
+    const dim = this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x04101c, 0.92)
+      .setInteractive();
+    this.craftLayer.add(dim);
+    this.craftLayer.add(
+      this.add
+        .text(GAME_WIDTH / 2, 34, '—— 生物碎片合成 ——', {
+          fontFamily: 'monospace', fontSize: '14px', color: '#ffd97d',
+        })
+        .setOrigin(0.5),
+    );
+
+    DataRegistry.allGadgets().forEach((g, i) => {
+      const y = 90 + i * 70;
+      const owned = GameState.hasUpgrade(g.id);
+      const have = GameState.fragments[g.fragmentId] ?? 0;
+      this.craftLayer!.add(
+        this.add
+          .text(GAME_WIDTH / 2 - 180, y, `${g.name}\n${g.description}`, {
+            fontFamily: 'monospace', fontSize: '11px', color: '#e8f4f8', lineSpacing: 4,
+          })
+          .setOrigin(0, 0.5),
+      );
+      if (owned) {
+        this.craftLayer!.add(
+          this.add
+            .text(GAME_WIDTH / 2 + 150, y, '✅ 已合成', {
+              fontFamily: 'monospace', fontSize: '12px', color: '#8bd3dd',
+            })
+            .setOrigin(0.5),
+        );
+        return;
+      }
+      const enough = have >= g.fragmentCount;
+      const btn = this.add
+        .text(GAME_WIDTH / 2 + 150, y, `碎片 ${have}/${g.fragmentCount} ${enough ? '合成！' : ''}`, {
+          fontFamily: 'monospace', fontSize: '11px',
+          color: enough ? '#ffd97d' : '#4a5a68',
+          backgroundColor: '#123047', padding: { x: 10, y: 4 },
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      btn.on('pointerdown', () => {
+        if (GameState.hasUpgrade(g.id)) return;
+        if (!GameState.spendFragments(g.fragmentId, g.fragmentCount)) return;
+        GameState.upgrades.push(g.id);
+        SaveManager.save();
+        this.openCraft();
+      });
+      this.craftLayer!.add(btn);
+    });
+
+    const close = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 34, '返回', {
+        fontFamily: 'monospace', fontSize: '12px', color: '#8bd3dd',
+        backgroundColor: '#123047', padding: { x: 14, y: 5 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    close.on('pointerdown', () => {
+      this.craftLayer?.destroy(true);
+      this.craftLayer = undefined;
+    });
+    this.craftLayer.add(close);
   }
 
   /** lv1 三件免费初始装备：新档（upgrades 为空）首次进水面时补发 */

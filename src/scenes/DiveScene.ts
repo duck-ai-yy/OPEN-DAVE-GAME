@@ -111,10 +111,14 @@ export class DiveScene extends Phaser.Scene {
     this.oxygen = new OxygenSystem(stats.oxygenMax);
     this.inventory = new InventorySystem(stats.weightMax);
 
-    // 渔获飘字（入包由 InventorySystem 监听同一事件处理）
+    // 渔获飘字（入包由 InventorySystem 监听同一事件处理）；碎片捕获即得、救援不丢
     const onCaught = ({ fishId }: { fishId: string }) => {
       const def = DataRegistry.getFish(fishId);
       this.floatText(`+ ${def.name}`, '#8bd3dd');
+      if (def.fragmentId) {
+        GameState.addFragment(def.fragmentId);
+        this.floatText(`✨ 生物碎片 ×1（共 ${GameState.fragments[def.fragmentId]}）`, '#ffd97d');
+      }
     };
     const onDamaged = ({ amount }: { amount: number }) => {
       this.cameras.main.shake(120, 0.004);
@@ -157,6 +161,33 @@ export class DiveScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1001);
     this.tweens.add({ targets: hint, alpha: 0, delay: 6500, duration: 800, onComplete: () => hint.destroy() });
+
+    // 电击器（合成后 Q 键触发，以 P1 为中心的范围麻痹）
+    let zapReadyAt = 0;
+    this.input.keyboard?.on('keydown-Q', () => {
+      if (this.rescueActive || !GameState.hasUpgrade('zapper')) return;
+      const now = this.time.now;
+      if (now < zapReadyAt) return;
+      const zap = DataRegistry.getGadget('zapper');
+      zapReadyAt = now + (zap.cooldownMs ?? 5000);
+      const cx = this.players[0].x;
+      const cy = this.players[0].y;
+      const radius = zap.radius ?? 90;
+      for (const f of this.spawner.fishes) {
+        if (!f.alive || f.def.protected) continue;
+        if ((f.x - cx) ** 2 + (f.y - cy) ** 2 <= radius * radius) f.stun(zap.stunMs ?? 3000);
+      }
+      // 电场视觉：扩散圆环
+      const ring = this.add.circle(cx, cy, 12, 0xfff3b0, 0.35).setDepth(600);
+      this.tweens.add({
+        targets: ring,
+        radius,
+        alpha: 0,
+        duration: 320,
+        onComplete: () => ring.destroy(),
+      });
+      this.floatText('⚡ 电击！', '#ffd97d');
+    });
 
     // ESC 放弃本潜返回水面
     this.input.keyboard?.on('keydown-ESC', () => this.endDive());

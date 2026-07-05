@@ -1,0 +1,12 @@
+[
+  {
+    "id": "zapper",
+    "name": "水母电击器",
+    "description": "Q 键释放电场，麻痹周围的鱼 3 秒",
+    "fragmentId": "jelly_shard",
+    "fragmentCount": 5,
+    "radius": 90,
+    "stunMs": 3000,
+    "cooldownMs": 5000
+  }
+]

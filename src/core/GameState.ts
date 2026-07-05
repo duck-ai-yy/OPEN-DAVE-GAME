@@ -16,6 +16,20 @@ class GameStateImpl {
   unlockedRegions: string[] = ['red_sea'];
   /** 同屏双人开关（运行时状态，不进存档；F2 drop-in 后跨潜保持） */
   coopEnabled = false;
+  /** 生物碎片库存（捕获即得、救援不丢） */
+  fragments: Record<string, number> = {};
+
+  addFragment(fragmentId: string, count = 1): void {
+    this.fragments[fragmentId] = (this.fragments[fragmentId] ?? 0) + count;
+  }
+
+  spendFragments(fragmentId: string, count: number): boolean {
+    const have = this.fragments[fragmentId] ?? 0;
+    if (have < count) return false;
+    if (have === count) delete this.fragments[fragmentId];
+    else this.fragments[fragmentId] = have - count;
+    return true;
+  }
 
   addMoney(amount: number): void {
     this.money += amount;
@@ -63,6 +77,7 @@ class GameStateImpl {
       unlockedRecipes: [...this.unlockedRecipes],
       firstCatches: [...this.firstCatches],
       unlockedRegions: [...this.unlockedRegions],
+      fragments: { ...this.fragments },
     };
   }
 
@@ -74,6 +89,7 @@ class GameStateImpl {
     this.unlockedRecipes = [...save.unlockedRecipes];
     this.firstCatches = [...save.firstCatches];
     this.unlockedRegions = [...save.unlockedRegions];
+    this.fragments = { ...save.fragments };
   }
 
   hasRegion(id: string): boolean {
@@ -88,6 +104,7 @@ class GameStateImpl {
     this.unlockedRecipes = [];
     this.firstCatches = [];
     this.unlockedRegions = ['red_sea'];
+    this.fragments = {};
   }
 }
 

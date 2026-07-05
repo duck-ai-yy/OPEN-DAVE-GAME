@@ -59,6 +59,22 @@ export interface FishDef {
   struggle?: { duration: number; tapsRequired: number };
   /** 保护动物：不可攻击（P1 好感度系统入口） */
   protected?: boolean;
+  /** 捕获时掉落的生物碎片 id（碎片→能力武器合成的原料） */
+  fragmentId?: string;
+}
+
+/** 生物能力武器（碎片合成）。效果参数由各 gadget 的实现模块解释 */
+export interface GadgetDef {
+  id: string;
+  name: string;
+  description: string;
+  /** 合成所需碎片 */
+  fragmentId: string;
+  fragmentCount: number;
+  /** 通用效果参数（电击器：radius/stunMs/cooldownMs） */
+  radius?: number;
+  stunMs?: number;
+  cooldownMs?: number;
 }
 
 export type EquipmentSlot = 'tank' | 'cargo' | 'harpoon';
@@ -125,6 +141,8 @@ export interface SaveData {
   firstCatches: string[];
   /** 已解锁地域 id 列表；旧档缺失时由 SaveManager 补默认值 */
   unlockedRegions: string[];
+  /** 生物碎片库存 fragmentId -> count；旧档缺失时补 {} */
+  fragments: Record<string, number>;
 }
 
 // ---------- 事件名常量 ----------
