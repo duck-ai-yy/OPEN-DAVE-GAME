@@ -135,6 +135,20 @@ export class DiveScene extends Phaser.Scene {
       .setDepth(1001)
       .setVisible(false);
 
+    // 新手操作提示：开局展示几秒后淡出
+    const hint = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 20, 'WASD 游动 · 按住鼠标蓄力松开发射 · J/空格 连打收线 · 回水面按 E 上浮', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#e8f4f8',
+        backgroundColor: '#12304788',
+        padding: { x: 8, y: 3 },
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1001);
+    this.tweens.add({ targets: hint, alpha: 0, delay: 6500, duration: 800, onComplete: () => hint.destroy() });
+
     // ESC 放弃本潜返回水面
     this.input.keyboard?.on('keydown-ESC', () => this.endDive());
 
