@@ -5,7 +5,12 @@ import type { RegionDef } from '../core/types';
 import { DataRegistry } from '../data/DataRegistry';
 import { KeyboardMouseSource } from '../input/KeyboardMouseSource';
 import { CameraRig } from '../dive/CameraRig';
+import { ParallaxBackground } from '../dive/ParallaxBackground';
 import { Player } from '../dive/Player';
+import { Terrain } from '../dive/Terrain';
+
+/** 玩家浅于此深度（px）时可上浮结束下潜 */
+const SURFACE_EXIT_Y = 30;
 
 export interface DiveSceneData {
   regionId: string;
@@ -22,6 +27,10 @@ export class DiveScene extends Phaser.Scene {
   private region!: RegionDef;
   private darkenOverlay!: Phaser.GameObjects.Rectangle;
   private lastDepthMeters = -1;
+  private terrain!: Terrain;
+  private parallax!: ParallaxBackground;
+  private surfacePrompt!: Phaser.GameObjects.Text;
+  private bubbles!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor() {
     super('Dive');
@@ -36,6 +45,9 @@ export class DiveScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.setBackgroundColor(this.region.waterColor);
 
+    this.parallax = new ParallaxBackground(this);
+    this.terrain = new Terrain(this, this.region);
+
     // 玩家（MVP 单人；数组结构为双人预留）
     const player = new Player(this, new KeyboardMouseSource(), {
       x: worldWidth / 2,
@@ -43,6 +55,20 @@ export class DiveScene extends Phaser.Scene {
       index: 0,
     });
     this.players = [player];
+    this.physics.add.collider(player.sprite, this.terrain.group);
+
+    // 游动气泡：跟随玩家，向上飘散
+    this.bubbles = this.add.particles(0, 0, 'ph_pixel', {
+      follow: player.sprite,
+      followOffset: { x: 0, y: -4 },
+      speedY: { min: -40, max: -15 },
+      speedX: { min: -8, max: 8 },
+      scale: { start: 2, end: 0.5 },
+      alpha: { start: 0.7, end: 0 },
+      lifespan: 900,
+      frequency: 120,
+      tint: 0xcfeef7,
+    });
 
     this.cameraRig = new CameraRig(this.cameras.main);
     this.cameraRig.follow(this.players);
@@ -54,17 +80,46 @@ export class DiveScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1000);
 
-    // ESC 结束下潜返回水面
-    this.input.keyboard?.on('keydown-ESC', () => {
-      EventBus.emit(Events.DIVE_ENDED);
-      this.scene.stop('UI');
-      this.scene.start('Surface');
-    });
+    this.surfacePrompt = this.add
+      .text(GAME_WIDTH / 2, 60, '按 E 上浮返回', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#ffd97d',
+        backgroundColor: '#12304788',
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(1001)
+      .setVisible(false);
+
+    // ESC 放弃本潜返回水面
+    this.input.keyboard?.on('keydown-ESC', () => this.endDive());
   }
 
-  update(): void {
+  private endDive(): void {
+    EventBus.emit(Events.DIVE_ENDED);
+    this.scene.stop('UI');
+    this.scene.start('Surface');
+  }
+
+  update(time: number): void {
     for (const p of this.players) p.update(this);
     this.cameraRig.update(this.players);
+    this.parallax.update(this.cameras.main, time);
+
+    // 水面出口：浅水区提示 + E 上浮
+    const p0 = this.players[0];
+    const nearSurface = p0.y < SURFACE_EXIT_Y;
+    this.surfacePrompt.setVisible(nearSurface);
+    if (nearSurface && p0.frame?.interact) {
+      this.endDive();
+      return;
+    }
+
+    // 气泡只在移动时明显
+    const moving = (p0.frame?.moveX ?? 0) !== 0 || (p0.frame?.moveY ?? 0) !== 0;
+    this.bubbles.frequency = moving ? 120 : 600;
 
     // 深度广播 + 环境变暗
     const depthMeters = Math.max(0, Math.floor(this.players[0].y / PX_PER_METER));
