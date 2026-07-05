@@ -3,6 +3,7 @@ import { EventBus } from '../core/EventBus';
 import { Events, GAME_HEIGHT, GAME_WIDTH, PX_PER_METER } from '../core/types';
 import type { RegionDef } from '../core/types';
 import { DataRegistry } from '../data/DataRegistry';
+import { getPlayerStats } from '../core/EquipmentStats';
 import { GameState } from '../core/GameState';
 import { KeyboardMouseSource } from '../input/KeyboardMouseSource';
 import { CameraRig } from '../dive/CameraRig';
@@ -94,8 +95,8 @@ export class DiveScene extends Phaser.Scene {
     this.harpoon = new Harpoon(this, player);
     this.rescueActive = false;
 
-    // 装备数值聚合（EquipmentStats 模块合入后替换为统一实现）
-    const stats = this.aggregateStats();
+    // 装备数值聚合（EquipmentStats 统一实现）
+    const stats = getPlayerStats(GameState.upgrades, DataRegistry.allEquipment());
     Harpoon.damage = stats.harpoonDamage;
     Harpoon.chargeRate = stats.chargeRate;
     this.oxygen = new OxygenSystem(stats.oxygenMax);
@@ -155,19 +156,6 @@ export class DiveScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1002);
     this.tweens.add({ targets: t, y: 90, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
-  }
-
-  /** 装备数值聚合：每 slot 取已购最高级；未购买时用 lv1 基础值 */
-  private aggregateStats(): { oxygenMax: number; weightMax: number; harpoonDamage: number; chargeRate: number } {
-    const stats = { oxygenMax: 60, weightMax: 12, harpoonDamage: 1, chargeRate: 1.0 };
-    for (const id of GameState.upgrades) {
-      const eq = DataRegistry.getEquipment(id);
-      if (eq.effects.oxygenMax) stats.oxygenMax = Math.max(stats.oxygenMax, eq.effects.oxygenMax);
-      if (eq.effects.weightMax) stats.weightMax = Math.max(stats.weightMax, eq.effects.weightMax);
-      if (eq.effects.damage) stats.harpoonDamage = Math.max(stats.harpoonDamage, eq.effects.damage);
-      if (eq.effects.chargeRate) stats.chargeRate = Math.max(stats.chargeRate, eq.effects.chargeRate);
-    }
-    return stats;
   }
 
   /** 氧尽救援：暂停玩法，只能保留一件渔获 */

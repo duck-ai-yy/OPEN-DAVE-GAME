@@ -8,7 +8,7 @@ import { SurfaceScene } from './scenes/SurfaceScene';
 import { RestaurantScene } from './scenes/RestaurantScene';
 import { UIScene } from './scenes/UIScene';
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: GAME_WIDTH,
@@ -32,4 +32,5 @@ new Phaser.Game({
 // 仅开发模式：暴露全局状态给 e2e 断言
 if (import.meta.env.DEV) {
   (window as unknown as Record<string, unknown>).__GameState = GameState;
+  (window as unknown as Record<string, unknown>).__PHASER_GAME__ = game;
 }
