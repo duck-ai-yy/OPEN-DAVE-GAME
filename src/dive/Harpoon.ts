@@ -11,9 +11,12 @@ import type { Player } from './Player';
  * 库存归属由场景侧处理——本模块不碰 GameState。
  */
 export class Harpoon {
-  /** M3 接入装备数值前的基础伤害/蓄力速率 */
+  /** 装备数值由 DiveScene 从 EquipmentStats 注入（双人共享同一套装备） */
   static damage = 1;
   static chargeRate = 1.0;
+
+  /** 全局挣扎锁：同时只允许一场 QTE，第二把鱼叉命中时直接击退 */
+  private static activeStruggle: Harpoon | null = null;
 
   private static readonly CHARGE_TIME_MS = 800;
   private static readonly PROJ_SPEED_MIN = 320;
@@ -74,6 +77,20 @@ export class Harpoon {
 
   get isStruggling(): boolean {
     return this.struggling !== null;
+  }
+
+  /** 玩家中途退出（F2）时收尾：清蓄力/收回叉/释放挣扎锁 */
+  cancel(): void {
+    this.charging = false;
+    this.charge = 0;
+    this.chargeBar.setVisible(false);
+    this.chargeBarBg.setVisible(false);
+    this.projectile?.destroy();
+    this.projectile = undefined;
+    if (this.struggling) {
+      this.struggling.forceFlee();
+      this.endStruggle();
+    }
   }
 
   update(frame: InputFrame, dtMs: number, fishes: Fish[]): void {
@@ -154,7 +171,7 @@ export class Harpoon {
       return;
     }
     fish.hp -= Harpoon.damage;
-    if (fish.hp <= 0) {
+    if (fish.hp <= 0 && !Harpoon.activeStruggle) {
       this.beginStruggle(fish);
     } else {
       fish.forceFlee();
@@ -163,6 +180,7 @@ export class Harpoon {
 
   private beginStruggle(fish: Fish): void {
     const cfg = fish.def.struggle ?? { duration: 3, tapsRequired: 8 };
+    Harpoon.activeStruggle = this;
     this.struggling = fish;
     fish.state = 'struggle';
     this.struggleTaps = 0;
@@ -211,6 +229,7 @@ export class Harpoon {
   }
 
   private endStruggle(): void {
+    if (Harpoon.activeStruggle === this) Harpoon.activeStruggle = null;
     this.struggling = null;
     this.rope.clear();
     this.qteText.setVisible(false);

@@ -14,6 +14,8 @@ class GameStateImpl {
   firstCatches: string[] = [];
   /** 已解锁地域；red_sea 为初始免费地域 */
   unlockedRegions: string[] = ['red_sea'];
+  /** 同屏双人开关（运行时状态，不进存档；F2 drop-in 后跨潜保持） */
+  coopEnabled = false;
 
   addMoney(amount: number): void {
     this.money += amount;

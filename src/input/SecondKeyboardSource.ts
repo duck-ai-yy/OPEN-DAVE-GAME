@@ -3,21 +3,31 @@ import type { InputFrame } from '../core/types';
 import type { InputSource } from './InputSource';
 
 /**
- * P1 键鼠输入源：WASD 移动 + 鼠标瞄准/左键开火 + E 交互 + J/空格连打。
- * 方向键让给 P2（SecondKeyboardSource），单人模式也不再监听。
+ * P2 键盘输入源：方向键移动，Shift 蓄力/松开发射，Ctrl 连打，回车交互。
+ * 无鼠标可用，瞄准 = 最后移动方向的延长线（origin 由持有者注入，
+ * 因为输入源不该反向依赖 Player）。
  */
-export class KeyboardMouseSource implements InputSource {
+export class SecondKeyboardSource implements InputSource {
   private keys?: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
     left: Phaser.Input.Keyboard.Key;
     right: Phaser.Input.Keyboard.Key;
-    interact: Phaser.Input.Keyboard.Key;
+    fire: Phaser.Input.Keyboard.Key;
     tap: Phaser.Input.Keyboard.Key;
-    tap2: Phaser.Input.Keyboard.Key;
+    interact: Phaser.Input.Keyboard.Key;
   };
   private boundScene?: Phaser.Scene;
   private prevFireDown = false;
+  private lastDirX = 1;
+  private lastDirY = 0;
+  private getOrigin: () => { x: number; y: number };
+
+  private static readonly AIM_REACH = 120;
+
+  constructor(getOrigin: () => { x: number; y: number }) {
+    this.getOrigin = getOrigin;
+  }
 
   private ensureKeys(scene: Phaser.Scene): void {
     if (this.keys && this.boundScene === scene) return;
@@ -25,13 +35,13 @@ export class KeyboardMouseSource implements InputSource {
     if (!kb) return;
     const K = Phaser.Input.Keyboard.KeyCodes;
     this.keys = {
-      up: kb.addKey(K.W),
-      down: kb.addKey(K.S),
-      left: kb.addKey(K.A),
-      right: kb.addKey(K.D),
-      interact: kb.addKey(K.E),
-      tap: kb.addKey(K.J),
-      tap2: kb.addKey(K.SPACE),
+      up: kb.addKey(K.UP),
+      down: kb.addKey(K.DOWN),
+      left: kb.addKey(K.LEFT),
+      right: kb.addKey(K.RIGHT),
+      fire: kb.addKey(K.SHIFT),
+      tap: kb.addKey(K.CTRL),
+      interact: kb.addKey(K.ENTER),
     };
     this.boundScene = scene;
   }
@@ -39,8 +49,6 @@ export class KeyboardMouseSource implements InputSource {
   poll(scene: Phaser.Scene): InputFrame {
     this.ensureKeys(scene);
     const k = this.keys;
-    const pointer = scene.input.activePointer;
-    const world = pointer.positionToCamera(scene.cameras.main) as Phaser.Math.Vector2;
 
     let moveX = 0;
     let moveY = 0;
@@ -50,24 +58,28 @@ export class KeyboardMouseSource implements InputSource {
       if (k.up.isDown) moveY -= 1;
       if (k.down.isDown) moveY += 1;
     }
-    // 归一化斜向
     if (moveX !== 0 && moveY !== 0) {
       const inv = 1 / Math.SQRT2;
       moveX *= inv;
       moveY *= inv;
     }
+    if (moveX !== 0 || moveY !== 0) {
+      this.lastDirX = moveX;
+      this.lastDirY = moveY;
+    }
 
-    const fireDown = pointer.leftButtonDown();
+    const origin = this.getOrigin();
+    const fireDown = k ? k.fire.isDown : false;
     const frame: InputFrame = {
       moveX,
       moveY,
-      aimWorldX: world.x,
-      aimWorldY: world.y,
+      aimWorldX: origin.x + this.lastDirX * SecondKeyboardSource.AIM_REACH,
+      aimWorldY: origin.y + this.lastDirY * SecondKeyboardSource.AIM_REACH,
       firePressed: fireDown && !this.prevFireDown,
       fireHeld: fireDown,
       fireReleased: !fireDown && this.prevFireDown,
       interact: k ? Phaser.Input.Keyboard.JustDown(k.interact) : false,
-      tap: k ? Phaser.Input.Keyboard.JustDown(k.tap) || Phaser.Input.Keyboard.JustDown(k.tap2) : false,
+      tap: k ? Phaser.Input.Keyboard.JustDown(k.tap) : false,
     };
     this.prevFireDown = fireDown;
     return frame;

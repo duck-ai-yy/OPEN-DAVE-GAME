@@ -22,8 +22,27 @@ export class FishSpawner {
     this.region = region;
   }
 
-  update(dtMs: number, camera: Phaser.Cameras.Scene2D.Camera, playerX: number, playerY: number, timeMs: number): void {
-    for (const f of this.fishes) f.update(dtMs, playerX, playerY, timeMs);
+  update(
+    dtMs: number,
+    camera: Phaser.Cameras.Scene2D.Camera,
+    players: readonly { x: number; y: number }[],
+    timeMs: number,
+  ): void {
+    // 每条鱼以最近的玩家为行为目标（逃跑/追击），支持双人
+    for (const f of this.fishes) {
+      let nx = players[0].x;
+      let ny = players[0].y;
+      let best = Number.MAX_VALUE;
+      for (const p of players) {
+        const d = (f.x - p.x) ** 2 + (f.y - p.y) ** 2;
+        if (d < best) {
+          best = d;
+          nx = p.x;
+          ny = p.y;
+        }
+      }
+      f.update(dtMs, nx, ny, timeMs);
+    }
 
     this.checkTimerMs -= dtMs;
     if (this.checkTimerMs > 0) return;

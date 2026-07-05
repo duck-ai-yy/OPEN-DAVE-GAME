@@ -6,6 +6,7 @@ import { DataRegistry } from '../data/DataRegistry';
 import { getPlayerStats } from '../core/EquipmentStats';
 import { GameState } from '../core/GameState';
 import { KeyboardMouseSource } from '../input/KeyboardMouseSource';
+import { SecondKeyboardSource } from '../input/SecondKeyboardSource';
 import { CameraRig } from '../dive/CameraRig';
 import { FishSpawner } from '../dive/FishSpawner';
 import { Harpoon } from '../dive/Harpoon';
@@ -38,7 +39,7 @@ export class DiveScene extends Phaser.Scene {
   private surfacePrompt!: Phaser.GameObjects.Text;
   private bubbles!: Phaser.GameObjects.Particles.ParticleEmitter;
   private spawner!: FishSpawner;
-  private harpoon!: Harpoon;
+  private harpoons: Harpoon[] = [];
   private oxygen!: OxygenSystem;
   private inventory!: InventorySystem;
   private rescueActive = false;
@@ -92,8 +93,16 @@ export class DiveScene extends Phaser.Scene {
       .setDepth(1000);
 
     this.spawner = new FishSpawner(this, this.region);
-    this.harpoon = new Harpoon(this, player);
+    this.harpoons = [new Harpoon(this, player)];
     this.rescueActive = false;
+
+    // 同屏双人：上一潜开着就直接带 P2 下水；F2 随时加入/退出
+    if (GameState.coopEnabled) this.addSecondPlayer(false);
+    this.input.keyboard?.on('keydown-F2', () => {
+      if (this.rescueActive) return;
+      if (this.players.length === 1) this.addSecondPlayer(true);
+      else this.removeSecondPlayer();
+    });
 
     // 装备数值聚合（EquipmentStats 统一实现）
     const stats = getPlayerStats(GameState.upgrades, DataRegistry.allEquipment());
@@ -172,6 +181,39 @@ export class DiveScene extends Phaser.Scene {
     this.tweens.add({ targets: t, y: 90, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
   }
 
+  /** P2 drop-in：第二键盘输入源 + 着色区分；共享氧气/背包/装备 */
+  private addSecondPlayer(announce: boolean): void {
+    if (this.players.length > 1) return;
+    GameState.coopEnabled = true;
+    const p1 = this.players[0];
+    const source = new SecondKeyboardSource(() => {
+      const p2 = this.players[1];
+      return p2 ? { x: p2.x, y: p2.y } : { x: p1.x, y: p1.y };
+    });
+    const player2 = new Player(this, source, {
+      x: p1.x + 40,
+      y: p1.y,
+      index: 1,
+      tint: 0x8bd3dd,
+    });
+    this.players.push(player2);
+    this.physics.add.collider(player2.sprite, this.terrain.group);
+    this.harpoons.push(new Harpoon(this, player2));
+    if (announce) {
+      this.floatText('P2 加入：方向键移动 · Shift 鱼叉 · Ctrl 收线 · 回车交互', '#8bd3dd');
+    }
+  }
+
+  private removeSecondPlayer(): void {
+    if (this.players.length < 2) return;
+    GameState.coopEnabled = false;
+    this.harpoons[1]?.cancel();
+    this.harpoons.pop();
+    const p2 = this.players.pop();
+    p2?.destroy();
+    this.floatText('P2 已退出', '#9a8fa8');
+  }
+
   /** 氧尽救援：暂停玩法，只能保留一件渔获 */
   private showRescuePanel(): void {
     if (this.rescueActive) return;
@@ -238,30 +280,31 @@ export class DiveScene extends Phaser.Scene {
     this.cameraRig.update(this.players);
     this.parallax.update(this.cameras.main, time);
 
-    const player0 = this.players[0];
-    this.spawner.update(delta, this.cameras.main, player0.x, player0.y, time);
-    if (player0.frame) {
-      this.harpoon.update(player0.frame, delta, this.spawner.fishes);
+    this.spawner.update(delta, this.cameras.main, this.players, time);
+    for (let i = 0; i < this.players.length; i++) {
+      const frame = this.players[i].frame;
+      if (frame) this.harpoons[i]?.update(frame, delta, this.spawner.fishes);
     }
 
-    // 氧气：深度带系数驱动消耗
-    const depthM = player0.y / PX_PER_METER;
-    const band = this.region.depthBands.find((b) => depthM >= b.range[0] && depthM < b.range[1]);
+    // 氧气池共享：按最深玩家所在深度带计费（双人时更狠，符合合作张力）
+    const deepestM = Math.max(...this.players.map((p) => p.y)) / PX_PER_METER;
+    const band = this.region.depthBands.find((b) => deepestM >= b.range[0] && deepestM < b.range[1]);
     this.oxygen.update(delta, band?.oxygenDrainMul ?? 1);
 
-    // 超重减速
-    player0.setOverweight(this.inventory.overweight);
+    // 背包共享：超重减速作用于所有人
+    for (const p of this.players) p.setOverweight(this.inventory.overweight);
 
     // 水面出口：浅水区提示 + E 上浮
-    const p0 = this.players[0];
-    const nearSurface = p0.y < SURFACE_EXIT_Y;
-    this.surfacePrompt.setVisible(nearSurface);
-    if (nearSurface && p0.frame?.interact) {
+    // 任一玩家在浅水按交互键即全员上浮
+    const anyNear = this.players.some((p) => p.y < SURFACE_EXIT_Y);
+    this.surfacePrompt.setVisible(anyNear);
+    if (anyNear && this.players.some((p) => p.y < SURFACE_EXIT_Y && p.frame?.interact)) {
       this.endDive();
       return;
     }
 
-    // 气泡只在移动时明显
+    // 气泡只在移动时明显（跟随 P1）
+    const p0 = this.players[0];
     const moving = (p0.frame?.moveX ?? 0) !== 0 || (p0.frame?.moveY ?? 0) !== 0;
     this.bubbles.frequency = moving ? 120 : 600;
 

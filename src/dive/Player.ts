@@ -5,8 +5,10 @@ import type { InputSource } from '../input/InputSource';
 export interface PlayerConfig {
   x: number;
   y: number;
-  /** 玩家编号（未来双人：0 / 1） */
+  /** 玩家编号（0 = P1 键鼠 / 1 = P2 第二键盘） */
   index: number;
+  /** 区分玩家的着色（P2 用） */
+  tint?: number;
 }
 
 /**
@@ -34,6 +36,11 @@ export class Player {
     this.sprite.setDrag(Player.DRAG, Player.DRAG);
     this.sprite.setMaxVelocity(Player.MAX_VEL, Player.MAX_VEL);
     this.sprite.setCollideWorldBounds(true);
+    if (config.tint !== undefined) this.sprite.setTint(config.tint);
+  }
+
+  destroy(): void {
+    this.sprite.destroy();
   }
 
   setOverweight(value: boolean): void {
