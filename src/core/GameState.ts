@@ -18,6 +18,13 @@ class GameStateImpl {
   coopEnabled = false;
   /** 生物碎片库存（捕获即得、救援不丢） */
   fragments: Record<string, number> = {};
+  /** 保护动物好感度（喂食累积，满值成为伙伴） */
+  affinity: Record<string, number> = {};
+
+  addAffinity(fishId: string): number {
+    this.affinity[fishId] = (this.affinity[fishId] ?? 0) + 1;
+    return this.affinity[fishId];
+  }
 
   addFragment(fragmentId: string, count = 1): void {
     this.fragments[fragmentId] = (this.fragments[fragmentId] ?? 0) + count;
@@ -78,6 +85,7 @@ class GameStateImpl {
       firstCatches: [...this.firstCatches],
       unlockedRegions: [...this.unlockedRegions],
       fragments: { ...this.fragments },
+      affinity: { ...this.affinity },
     };
   }
 
@@ -90,6 +98,7 @@ class GameStateImpl {
     this.firstCatches = [...save.firstCatches];
     this.unlockedRegions = [...save.unlockedRegions];
     this.fragments = { ...save.fragments };
+    this.affinity = { ...save.affinity };
   }
 
   hasRegion(id: string): boolean {
@@ -105,6 +114,7 @@ class GameStateImpl {
     this.firstCatches = [];
     this.unlockedRegions = ['red_sea'];
     this.fragments = {};
+    this.affinity = {};
   }
 }
 

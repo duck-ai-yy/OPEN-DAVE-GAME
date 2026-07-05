@@ -143,7 +143,14 @@ export interface SaveData {
   unlockedRegions: string[];
   /** 生物碎片库存 fragmentId -> count；旧档缺失时补 {} */
   fragments: Record<string, number>;
+  /** 保护动物好感度 fishId -> 值；旧档缺失时补 {} */
+  affinity: Record<string, number>;
 }
+
+/** 好感度满值：达到即成为同行伙伴 */
+export const AFFINITY_MAX = 3;
+/** 海龟伙伴提供的额外氧气上限 */
+export const TURTLE_OXYGEN_BONUS = 30;
 
 // ---------- 事件名常量 ----------
 

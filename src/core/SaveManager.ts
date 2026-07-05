@@ -26,6 +26,7 @@ export const SaveManager = {
       // 功能上线前的旧档缺字段：补默认值，版本号不动
       if (!Array.isArray(data.unlockedRegions)) data.unlockedRegions = ['red_sea'];
       if (typeof data.fragments !== 'object' || data.fragments === null) data.fragments = {};
+      if (typeof data.affinity !== 'object' || data.affinity === null) data.affinity = {};
       GameState.loadFrom(data);
       return true;
     } catch {

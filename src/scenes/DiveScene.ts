@@ -1,13 +1,15 @@
 import Phaser from 'phaser';
 import { EventBus } from '../core/EventBus';
-import { Events, GAME_HEIGHT, GAME_WIDTH, PX_PER_METER } from '../core/types';
+import { AFFINITY_MAX, Events, GAME_HEIGHT, GAME_WIDTH, PX_PER_METER, TURTLE_OXYGEN_BONUS } from '../core/types';
 import type { RegionDef } from '../core/types';
 import { DataRegistry } from '../data/DataRegistry';
 import { getPlayerStats } from '../core/EquipmentStats';
 import { GameState } from '../core/GameState';
+import { SaveManager } from '../core/SaveManager';
 import { KeyboardMouseSource } from '../input/KeyboardMouseSource';
 import { SecondKeyboardSource } from '../input/SecondKeyboardSource';
 import { CameraRig } from '../dive/CameraRig';
+import type { Fish } from '../dive/Fish';
 import { FishSpawner } from '../dive/FishSpawner';
 import { Harpoon } from '../dive/Harpoon';
 import { ParallaxBackground } from '../dive/ParallaxBackground';
@@ -43,6 +45,8 @@ export class DiveScene extends Phaser.Scene {
   private oxygen!: OxygenSystem;
   private inventory!: InventorySystem;
   private rescueActive = false;
+  private companion?: Phaser.GameObjects.Image;
+  private feedPrompt!: Phaser.GameObjects.Text;
 
   constructor() {
     super('Dive');
@@ -108,7 +112,17 @@ export class DiveScene extends Phaser.Scene {
     const stats = getPlayerStats(GameState.upgrades, DataRegistry.allEquipment());
     Harpoon.damage = stats.harpoonDamage;
     Harpoon.chargeRate = stats.chargeRate;
-    this.oxygen = new OxygenSystem(stats.oxygenMax);
+
+    // 海龟伙伴：好感满值后同行，额外携带一瓶氧气
+    const hasTurtleBuddy = (GameState.affinity['sea_turtle'] ?? 0) >= AFFINITY_MAX;
+    if (hasTurtleBuddy) {
+      this.companion = this.add
+        .image(player.x - 30, player.y - 10, 'ph_fish_large')
+        .setTint(0x6ec87a)
+        .setDepth(5);
+      this.floatText(`🐢 海龟伙伴同行：氧气 +${TURTLE_OXYGEN_BONUS}`, '#6ec87a');
+    }
+    this.oxygen = new OxygenSystem(stats.oxygenMax + (hasTurtleBuddy ? TURTLE_OXYGEN_BONUS : 0));
     this.inventory = new InventorySystem(stats.weightMax);
 
     // 渔获飘字（入包由 InventorySystem 监听同一事件处理）；碎片捕获即得、救援不丢
@@ -134,6 +148,18 @@ export class DiveScene extends Phaser.Scene {
       EventBus.off(Events.PLAYER_RESCUED, onRescued);
       this.inventory.dispose();
     });
+
+    this.feedPrompt = this.add
+      .text(0, 0, '按 E 喂食（消耗 1 条渔获）', {
+        fontFamily: 'monospace',
+        fontSize: '9px',
+        color: '#ffd97d',
+        backgroundColor: '#12304788',
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(1001)
+      .setVisible(false);
 
     this.surfacePrompt = this.add
       .text(GAME_WIDTH / 2, 60, '按 E 上浮返回', {
@@ -210,6 +236,45 @@ export class DiveScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(1002);
     this.tweens.add({ targets: t, y: 90, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
+  }
+
+  /** 保护动物喂食：任一玩家贴近(60px)且背包有渔获时提示，交互键消耗 1 条 +1 好感 */
+  private updateFeeding(): void {
+    const FEED_RANGE_SQ = 60 * 60;
+    let target: { fish: Fish; player: Player } | null = null;
+    for (const f of this.spawner.fishes) {
+      if (!f.alive || !f.def.protected) continue;
+      for (const p of this.players) {
+        if ((f.x - p.x) ** 2 + (f.y - p.y) ** 2 < FEED_RANGE_SQ) {
+          target = { fish: f, player: p };
+          break;
+        }
+      }
+      if (target) break;
+    }
+    if (!target || this.inventory.catches.length === 0) {
+      this.feedPrompt.setVisible(false);
+      return;
+    }
+    const fish = target.fish;
+    const cur = GameState.affinity[fish.def.id] ?? 0;
+    const bonded = cur >= AFFINITY_MAX;
+    this.feedPrompt
+      .setText(bonded ? `${fish.def.name} ❤❤❤（已是伙伴）` : '按 E 喂食（消耗 1 条渔获）')
+      .setPosition(fish.x, fish.y - 14)
+      .setVisible(true);
+    if (bonded) return;
+
+    if (target.player.frame?.interact) {
+      const fed = this.inventory.takeOne();
+      if (!fed) return;
+      const level = GameState.addAffinity(fish.def.id);
+      this.floatText(`🐟→${fish.def.name} 好感 ${'❤'.repeat(level)}${'♡'.repeat(Math.max(0, AFFINITY_MAX - level))}`, '#ff9eb5');
+      if (level >= AFFINITY_MAX) {
+        this.floatText(`🎉 ${fish.def.name}成为同行伙伴！下次下潜生效`, '#6ec87a');
+      }
+      SaveManager.save();
+    }
   }
 
   /** P2 drop-in：第二键盘输入源 + 着色区分；共享氧气/背包/装备 */
@@ -332,6 +397,18 @@ export class DiveScene extends Phaser.Scene {
     if (anyNear && this.players.some((p) => p.y < SURFACE_EXIT_Y && p.frame?.interact)) {
       this.endDive();
       return;
+    }
+
+    // 喂食保护动物：贴近 + 有渔获 + 按交互键 → 好感度+1
+    this.updateFeeding();
+
+    // 海龟伙伴跟随 P1（滞后漂浮感）
+    if (this.companion) {
+      const target = this.players[0];
+      const offX = target.sprite.flipX ? 34 : -34;
+      this.companion.x = Phaser.Math.Linear(this.companion.x, target.x + offX, 0.04);
+      this.companion.y = Phaser.Math.Linear(this.companion.y, target.y - 8 + Math.sin(time / 500) * 4, 0.04);
+      this.companion.setFlipX(this.companion.x > target.x);
     }
 
     // 气泡只在移动时明显（跟随 P1）

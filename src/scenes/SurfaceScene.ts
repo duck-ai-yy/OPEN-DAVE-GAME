@@ -32,6 +32,7 @@ export class SurfaceScene extends Phaser.Scene {
   private moneyText!: Phaser.GameObjects.Text;
   private shopLayer?: Phaser.GameObjects.Container;
   private craftLayer?: Phaser.GameObjects.Container;
+  private codexLayer?: Phaser.GameObjects.Container;
   private regionLayer?: Phaser.GameObjects.Container;
 
   constructor() {
@@ -70,6 +71,71 @@ export class SurfaceScene extends Phaser.Scene {
     this.makeButton(270, '🧪 生物合成', () => {
       this.openCraft();
     });
+    this.makeButton(310, '📖 生物图鉴', () => {
+      this.openCodex();
+    });
+  }
+
+  // ---------- 生物图鉴弹层 ----------
+
+  /** firstCatches 驱动：捕过显名字与价格，没捕过是 ???；保护动物显好感 */
+  private openCodex(): void {
+    this.codexLayer?.destroy(true);
+    this.codexLayer = this.add.container(0, 0).setDepth(10);
+    const dim = this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x04101c, 0.94)
+      .setInteractive();
+    this.codexLayer.add(dim);
+
+    const all = DataRegistry.allFish();
+    const seen = all.filter((f) => GameState.firstCatches.includes(f.id) || (GameState.affinity[f.id] ?? 0) > 0).length;
+    this.codexLayer.add(
+      this.add
+        .text(GAME_WIDTH / 2, 26, `—— 生物图鉴 ${seen}/${all.length} ——`, {
+          fontFamily: 'monospace', fontSize: '13px', color: '#ffd97d',
+        })
+        .setOrigin(0.5),
+    );
+
+    const perCol = Math.ceil(all.length / 2);
+    all.forEach((f, i) => {
+      const col = Math.floor(i / perCol);
+      const row = i % perCol;
+      const x = 60 + col * 280;
+      const y = 52 + row * 20;
+      let label: string;
+      let color: string;
+      if (f.protected) {
+        const level = GameState.affinity[f.id] ?? 0;
+        const met = GameState.firstCatches.includes(f.id) || level > 0;
+        label = met
+          ? `🛡 ${f.name}  ${'❤'.repeat(level)}${'♡'.repeat(Math.max(0, 3 - level))}`
+          : '🛡 ？？？（保护动物·喂食解锁）';
+        color = met ? '#6ec87a' : '#4a5a68';
+      } else if (GameState.firstCatches.includes(f.id)) {
+        label = `● ${f.name}  ${f.sellPrice}金`;
+        color = '#e8f4f8';
+      } else {
+        label = '○ ？？？';
+        color = '#4a5a68';
+      }
+      this.codexLayer!.add(
+        this.add.text(x, y, label, { fontFamily: 'monospace', fontSize: '10px', color }).setOrigin(0, 0.5),
+      );
+    });
+
+    const close = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 22, '返回', {
+        fontFamily: 'monospace', fontSize: '12px', color: '#8bd3dd',
+        backgroundColor: '#123047', padding: { x: 14, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    close.on('pointerdown', () => {
+      this.codexLayer?.destroy(true);
+      this.codexLayer = undefined;
+    });
+    this.codexLayer.add(close);
   }
 
   // ---------- 生物合成弹层 ----------

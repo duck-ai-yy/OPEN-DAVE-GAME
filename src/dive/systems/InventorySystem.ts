@@ -33,6 +33,15 @@ export class InventorySystem {
     this.emit();
   }
 
+  /** 喂食等消耗：取走最后一条渔获，返回其 fishId（空包返回 null） */
+  takeOne(): string | null {
+    const fishId = this.catches.pop();
+    if (!fishId) return null;
+    this.totalWeight -= DataRegistry.getFish(fishId).weight;
+    this.emit();
+    return fishId;
+  }
+
   /** 上岸成功：全部入账 */
   commitAll(): void {
     for (const id of this.catches) GameState.addCatch(id);
