@@ -43,5 +43,35 @@
     "id": "shark_fin_ramen", "name": "鲨鱼汤面",
     "ingredients": [{ "fishId": "hammerhead", "count": 1 }],
     "price": 500, "servings": 5, "unlock": { "type": "firstCatch", "fishId": "hammerhead" }
+  },
+  {
+    "id": "blue_tang_salad", "name": "蓝倒吊海藻沙拉",
+    "ingredients": [{ "fishId": "blue_tang", "count": 2 }],
+    "price": 95, "servings": 2, "unlock": { "type": "firstCatch", "fishId": "blue_tang" }
+  },
+  {
+    "id": "parrotfish_bake", "name": "香烤鹦嘴鱼",
+    "ingredients": [{ "fishId": "parrotfish", "count": 1 }],
+    "price": 180, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "parrotfish" }
+  },
+  {
+    "id": "wrasse_steam", "name": "清蒸隆头鹦哥",
+    "ingredients": [{ "fishId": "humphead_wrasse", "count": 1 }],
+    "price": 580, "servings": 4, "unlock": { "type": "firstCatch", "fishId": "humphead_wrasse" }
+  },
+  {
+    "id": "reef_shark_steak", "name": "礁鲨炙烤排",
+    "ingredients": [{ "fishId": "reef_shark", "count": 1 }],
+    "price": 680, "servings": 5, "unlock": { "type": "firstCatch", "fishId": "reef_shark" }
+  },
+  {
+    "id": "cobia_teriyaki", "name": "照烧军曹鱼",
+    "ingredients": [{ "fishId": "cobia", "count": 1 }],
+    "price": 280, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "cobia" }
+  },
+  {
+    "id": "drumfish_soup", "name": "石首鱼奶油浓汤",
+    "ingredients": [{ "fishId": "drumfish", "count": 1 }],
+    "price": 350, "servings": 3, "unlock": { "type": "firstCatch", "fishId": "drumfish" }
   }
 ]

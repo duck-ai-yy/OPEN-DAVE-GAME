@@ -2,7 +2,13 @@ import Phaser from 'phaser';
 import { GameState } from '../core/GameState';
 import { SaveManager } from '../core/SaveManager';
 import { DataRegistry } from '../data/DataRegistry';
-import { GAME_WIDTH, GAME_HEIGHT, type EquipmentDef, type EquipmentSlot } from '../core/types';
+import {
+  GAME_WIDTH,
+  GAME_HEIGHT,
+  type EquipmentDef,
+  type EquipmentSlot,
+  type RegionDef,
+} from '../core/types';
 
 const SLOT_LABELS: Record<EquipmentSlot, string> = {
   tank: '氧气瓶',
@@ -25,6 +31,7 @@ const EFFECT_LABELS: Record<keyof EquipmentDef['effects'], string> = {
 export class SurfaceScene extends Phaser.Scene {
   private moneyText!: Phaser.GameObjects.Text;
   private shopLayer?: Phaser.GameObjects.Container;
+  private regionLayer?: Phaser.GameObjects.Container;
 
   constructor() {
     super('Surface');
@@ -50,9 +57,8 @@ export class SurfaceScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.makeButton(150, '🤿 下潜（埃及红海）', () => {
-      this.scene.launch('UI');
-      this.scene.start('Dive', { regionId: 'red_sea' });
+    this.makeButton(150, '🤿 下潜', () => {
+      this.openRegionPicker();
     });
     this.makeButton(190, '🍜 晚间营业', () => {
       this.scene.start('Restaurant');
@@ -86,6 +92,120 @@ export class SurfaceScene extends Phaser.Scene {
     btn.on('pointerover', () => btn.setColor('#ffffff'));
     btn.on('pointerout', () => btn.setColor('#8bd3dd'));
     btn.on('pointerdown', onClick);
+  }
+
+  // ---------- 地域选择弹层 ----------
+
+  /** 下潜前选地域：已解锁直接进，未解锁显示价格、够钱可当场购买 */
+  private openRegionPicker(): void {
+    this.regionLayer?.destroy(true);
+    this.regionLayer = this.add.container(0, 0).setDepth(10);
+
+    const dim = this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x04101c, 0.92)
+      .setInteractive(); // 挡住底下按钮的点击
+    this.regionLayer.add(dim);
+
+    this.regionLayer.add(
+      this.add
+        .text(GAME_WIDTH / 2, 34, '—— 选择下潜海域 ——', {
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: '#ffd97d',
+        })
+        .setOrigin(0.5),
+    );
+    this.regionLayer.add(
+      this.add
+        .text(GAME_WIDTH / 2, 56, `金币 ${GameState.money}`, {
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: '#ffd97d',
+        })
+        .setOrigin(0.5),
+    );
+
+    DataRegistry.allRegions().forEach((region, i) => {
+      this.buildRegionRow(region, 100 + i * 56);
+    });
+
+    const close = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 34, '返回', {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#8bd3dd',
+        backgroundColor: '#123047',
+        padding: { x: 14, y: 5 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    close.on('pointerdown', () => {
+      this.regionLayer?.destroy(true);
+      this.regionLayer = undefined;
+    });
+    this.regionLayer.add(close);
+  }
+
+  /** 一行一个地域：解锁状态决定按钮语义（进入 / 购买 / 买不起置灰） */
+  private buildRegionRow(region: RegionDef, y: number): void {
+    if (!this.regionLayer) return;
+    const unlocked = GameState.hasRegion(region.id);
+    const cost = region.unlockCost ?? 0;
+
+    this.regionLayer.add(
+      this.add
+        .text(GAME_WIDTH / 2 - 180, y, `${region.name}  · 最深 ${region.maxDepth}m`, {
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: unlocked ? '#e8f4f8' : '#4a5a68',
+        })
+        .setOrigin(0, 0.5),
+    );
+
+    if (unlocked) {
+      const goBtn = this.add
+        .text(GAME_WIDTH / 2 + 150, y, '下潜 ▶', {
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: '#8bd3dd',
+          backgroundColor: '#123047',
+          padding: { x: 12, y: 4 },
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      goBtn.on('pointerover', () => goBtn.setColor('#ffffff'));
+      goBtn.on('pointerout', () => goBtn.setColor('#8bd3dd'));
+      goBtn.on('pointerdown', () => {
+        this.scene.launch('UI');
+        this.scene.start('Dive', { regionId: region.id });
+      });
+      this.regionLayer.add(goBtn);
+      return;
+    }
+
+    const affordable = GameState.money >= cost;
+    const buyBtn = this.add
+      .text(GAME_WIDTH / 2 + 150, y, `🔒 解锁 ${cost} 金币`, {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: affordable ? '#ffd97d' : '#4a5a68',
+        backgroundColor: '#123047',
+        padding: { x: 10, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    buyBtn.on('pointerdown', () => this.buyRegion(region));
+    this.regionLayer.add(buyBtn);
+  }
+
+  /** 购买地域：扣钱→记入已解锁→立即存档；重建弹层刷新状态 */
+  private buyRegion(region: RegionDef): void {
+    if (GameState.hasRegion(region.id)) return;
+    if (!GameState.spendMoney(region.unlockCost ?? 0)) return;
+    GameState.unlockedRegions.push(region.id);
+    SaveManager.save();
+    this.moneyText.setText(`金币 ${GameState.money}`);
+    this.openRegionPicker();
   }
 
   // ---------- 商店弹层 ----------

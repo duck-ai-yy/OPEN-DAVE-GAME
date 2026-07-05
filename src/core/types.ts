@@ -106,6 +106,8 @@ export interface RegionDef {
   ambientDarkenPerMeter: number;
   depthBands: DepthBandDef[];
   maxDepth: number;
+  /** 地域解锁价格（金币）；缺省 = 免费（初始地域） */
+  unlockCost?: number;
 }
 
 // ---------- 存档 ----------
@@ -121,6 +123,8 @@ export interface SaveData {
   unlockedRecipes: string[];
   /** 首捕记录（图鉴/菜谱解锁/未来水族馆的种子数据） */
   firstCatches: string[];
+  /** 已解锁地域 id 列表；旧档缺失时由 SaveManager 补默认值 */
+  unlockedRegions: string[];
 }
 
 // ---------- 事件名常量 ----------

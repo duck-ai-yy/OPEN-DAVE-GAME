@@ -27,6 +27,8 @@ export class PreloadScene extends Phaser.Scene {
     this.load.json('data_equipment', 'assets/data/equipment.json');
     this.load.json('data_recipes', 'assets/data/recipes.json');
     this.load.json('data_region_red_sea', 'assets/data/regions/red_sea.json');
+    this.load.json('data_region_great_barrier_reef', 'assets/data/regions/great_barrier_reef.json');
+    this.load.json('data_region_shipwreck', 'assets/data/regions/shipwreck.json');
   }
 
   create(): void {
@@ -34,7 +36,11 @@ export class PreloadScene extends Phaser.Scene {
       fish: this.cache.json.get('data_fish') as FishDef[],
       equipment: this.cache.json.get('data_equipment') as EquipmentDef[],
       recipes: this.cache.json.get('data_recipes') as RecipeDef[],
-      regions: [this.cache.json.get('data_region_red_sea') as RegionDef],
+      regions: [
+        this.cache.json.get('data_region_red_sea') as RegionDef,
+        this.cache.json.get('data_region_great_barrier_reef') as RegionDef,
+        this.cache.json.get('data_region_shipwreck') as RegionDef,
+      ],
     });
 
     this.makePlaceholders();

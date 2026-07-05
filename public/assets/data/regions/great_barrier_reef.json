@@ -1,0 +1,39 @@
+{
+  "id": "great_barrier_reef",
+  "name": "澳大利亚大堡礁",
+  "waterColor": "#1a8ea0",
+  "ambientDarkenPerMeter": 0.004,
+  "maxDepth": 220,
+  "unlockCost": 1200,
+  "depthBands": [
+    {
+      "range": [0, 70],
+      "oxygenDrainMul": 1.0,
+      "spawns": [
+        { "fishId": "blue_tang", "weight": 12 },
+        { "fishId": "parrotfish", "weight": 8 },
+        { "fishId": "clownfish", "weight": 5 },
+        { "fishId": "manta_ray", "weight": 1 }
+      ]
+    },
+    {
+      "range": [70, 150],
+      "oxygenDrainMul": 1.4,
+      "spawns": [
+        { "fishId": "parrotfish", "weight": 6 },
+        { "fishId": "coral_trout", "weight": 7 },
+        { "fishId": "humphead_wrasse", "weight": 3 },
+        { "fishId": "manta_ray", "weight": 1 }
+      ]
+    },
+    {
+      "range": [150, 220],
+      "oxygenDrainMul": 2.1,
+      "spawns": [
+        { "fishId": "humphead_wrasse", "weight": 4 },
+        { "fishId": "reef_shark", "weight": 3 },
+        { "fishId": "tuna", "weight": 3 }
+      ]
+    }
+  ]
+}

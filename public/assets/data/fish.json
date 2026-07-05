@@ -65,5 +65,81 @@
     "speed": 30, "fleeSpeed": 60, "aggroRadius": 0, "fleeRadius": 0, "damage": 0,
     "depthBand": [20, 120], "spawnWeight": 1,
     "protected": true
+  },
+
+  {
+    "id": "blue_tang", "name": "蓝倒吊", "texture": "ph_fish_small", "size": "small",
+    "weight": 1, "hp": 1, "sellPrice": 70, "behavior": "school",
+    "speed": 65, "fleeSpeed": 150, "aggroRadius": 0, "fleeRadius": 90, "damage": 0,
+    "depthBand": [0, 70], "spawnWeight": 12
+  },
+  {
+    "id": "parrotfish", "name": "鹦嘴鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 3, "hp": 2, "sellPrice": 130, "behavior": "wander",
+    "speed": 55, "fleeSpeed": 150, "aggroRadius": 0, "fleeRadius": 100, "damage": 0,
+    "depthBand": [0, 150], "spawnWeight": 8,
+    "struggle": { "duration": 3.0, "tapsRequired": 6 }
+  },
+  {
+    "id": "coral_trout", "name": "珊瑚石斑", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 4, "hp": 3, "sellPrice": 190, "behavior": "flee_only",
+    "speed": 50, "fleeSpeed": 160, "aggroRadius": 0, "fleeRadius": 100, "damage": 0,
+    "depthBand": [70, 150], "spawnWeight": 7,
+    "struggle": { "duration": 3.5, "tapsRequired": 8 }
+  },
+  {
+    "id": "humphead_wrasse", "name": "隆头鹦哥", "texture": "ph_fish_large", "size": "large",
+    "weight": 9, "hp": 6, "sellPrice": 480, "behavior": "flee_only",
+    "speed": 60, "fleeSpeed": 190, "aggroRadius": 0, "fleeRadius": 120, "damage": 0,
+    "depthBand": [70, 220], "spawnWeight": 4,
+    "struggle": { "duration": 4.5, "tapsRequired": 13 }
+  },
+  {
+    "id": "reef_shark", "name": "白鳍礁鲨", "texture": "ph_fish_large", "size": "large",
+    "weight": 11, "hp": 8, "sellPrice": 560, "behavior": "aggressive",
+    "speed": 75, "fleeSpeed": 190, "aggroRadius": 130, "fleeRadius": 0, "damage": 16,
+    "depthBand": [150, 220], "spawnWeight": 3,
+    "struggle": { "duration": 5.0, "tapsRequired": 15 }
+  },
+  {
+    "id": "manta_ray", "name": "蝠鲼", "texture": "ph_fish_large", "size": "large",
+    "weight": 0, "hp": 999, "sellPrice": 0, "behavior": "wander",
+    "speed": 35, "fleeSpeed": 70, "aggroRadius": 0, "fleeRadius": 0, "damage": 0,
+    "depthBand": [30, 160], "spawnWeight": 1,
+    "protected": true
+  },
+
+  {
+    "id": "bearded_grunt", "name": "髭鲷", "texture": "ph_fish_small", "size": "small",
+    "weight": 1, "hp": 1, "sellPrice": 90, "behavior": "school",
+    "speed": 55, "fleeSpeed": 140, "aggroRadius": 0, "fleeRadius": 90, "damage": 0,
+    "depthBand": [0, 60], "spawnWeight": 10
+  },
+  {
+    "id": "cobia", "name": "军曹鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 4, "hp": 3, "sellPrice": 220, "behavior": "wander",
+    "speed": 70, "fleeSpeed": 170, "aggroRadius": 0, "fleeRadius": 110, "damage": 0,
+    "depthBand": [20, 110], "spawnWeight": 7,
+    "struggle": { "duration": 3.5, "tapsRequired": 8 }
+  },
+  {
+    "id": "drumfish", "name": "黑石首鱼", "texture": "ph_fish_medium", "size": "medium",
+    "weight": 5, "hp": 4, "sellPrice": 280, "behavior": "flee_only",
+    "speed": 45, "fleeSpeed": 150, "aggroRadius": 0, "fleeRadius": 100, "damage": 0,
+    "depthBand": [50, 160], "spawnWeight": 5,
+    "struggle": { "duration": 4.0, "tapsRequired": 10 }
+  },
+
+  {
+    "id": "artifact_coin_pouch", "name": "古代金币袋", "texture": "ph_fish_small", "size": "small",
+    "weight": 5, "hp": 1, "sellPrice": 800, "behavior": "wander",
+    "speed": 0, "fleeSpeed": 0, "aggroRadius": 0, "fleeRadius": 0, "damage": 0,
+    "depthBand": [50, 160], "spawnWeight": 2
+  },
+  {
+    "id": "artifact_porcelain_vase", "name": "青花瓷瓶", "texture": "ph_fish_small", "size": "small",
+    "weight": 6, "hp": 1, "sellPrice": 1300, "behavior": "wander",
+    "speed": 3, "fleeSpeed": 0, "aggroRadius": 0, "fleeRadius": 0, "damage": 0,
+    "depthBand": [110, 160], "spawnWeight": 1
   }
 ]

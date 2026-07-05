@@ -1,0 +1,39 @@
+{
+  "id": "shipwreck",
+  "name": "沉船遗址",
+  "waterColor": "#24343f",
+  "ambientDarkenPerMeter": 0.006,
+  "maxDepth": 160,
+  "unlockCost": 3000,
+  "depthBands": [
+    {
+      "range": [0, 50],
+      "oxygenDrainMul": 1.0,
+      "spawns": [
+        { "fishId": "bearded_grunt", "weight": 10 },
+        { "fishId": "sardine", "weight": 6 },
+        { "fishId": "cobia", "weight": 4 }
+      ]
+    },
+    {
+      "range": [50, 110],
+      "oxygenDrainMul": 1.5,
+      "spawns": [
+        { "fishId": "cobia", "weight": 7 },
+        { "fishId": "drumfish", "weight": 5 },
+        { "fishId": "moray", "weight": 4 },
+        { "fishId": "artifact_coin_pouch", "weight": 2 }
+      ]
+    },
+    {
+      "range": [110, 160],
+      "oxygenDrainMul": 2.2,
+      "spawns": [
+        { "fishId": "drumfish", "weight": 5 },
+        { "fishId": "moray", "weight": 3 },
+        { "fishId": "artifact_coin_pouch", "weight": 2 },
+        { "fishId": "artifact_porcelain_vase", "weight": 1 }
+      ]
+    }
+  ]
+}

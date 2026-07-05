@@ -12,6 +12,8 @@ class GameStateImpl {
   inventory: Record<string, number> = {};
   unlockedRecipes: string[] = [];
   firstCatches: string[] = [];
+  /** 已解锁地域；red_sea 为初始免费地域 */
+  unlockedRegions: string[] = ['red_sea'];
 
   addMoney(amount: number): void {
     this.money += amount;
@@ -58,6 +60,7 @@ class GameStateImpl {
       inventory: { ...this.inventory },
       unlockedRecipes: [...this.unlockedRecipes],
       firstCatches: [...this.firstCatches],
+      unlockedRegions: [...this.unlockedRegions],
     };
   }
 
@@ -68,6 +71,11 @@ class GameStateImpl {
     this.inventory = { ...save.inventory };
     this.unlockedRecipes = [...save.unlockedRecipes];
     this.firstCatches = [...save.firstCatches];
+    this.unlockedRegions = [...save.unlockedRegions];
+  }
+
+  hasRegion(id: string): boolean {
+    return this.unlockedRegions.includes(id);
   }
 
   reset(): void {
@@ -77,6 +85,7 @@ class GameStateImpl {
     this.inventory = {};
     this.unlockedRecipes = [];
     this.firstCatches = [];
+    this.unlockedRegions = ['red_sea'];
   }
 }
 
