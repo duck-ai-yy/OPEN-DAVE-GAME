@@ -27,6 +27,9 @@ export const SaveManager = {
       if (!Array.isArray(data.unlockedRegions)) data.unlockedRegions = ['red_sea'];
       if (typeof data.fragments !== 'object' || data.fragments === null) data.fragments = {};
       if (typeof data.affinity !== 'object' || data.affinity === null) data.affinity = {};
+      if (typeof data.aquarium !== 'object' || data.aquarium === null) {
+        data.aquarium = { exhibits: {}, decorations: [], lastTicketIncome: 0 };
+      }
       GameState.loadFrom(data);
       return true;
     } catch {

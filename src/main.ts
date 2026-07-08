@@ -6,6 +6,7 @@ import { PreloadScene } from './scenes/PreloadScene';
 import { DiveScene } from './scenes/DiveScene';
 import { SurfaceScene } from './scenes/SurfaceScene';
 import { RestaurantScene } from './scenes/RestaurantScene';
+import { AquariumScene } from './scenes/AquariumScene';
 import { UIScene } from './scenes/UIScene';
 
 const game = new Phaser.Game({
@@ -26,7 +27,7 @@ const game = new Phaser.Game({
       debug: false,
     },
   },
-  scene: [BootScene, PreloadScene, SurfaceScene, DiveScene, RestaurantScene, UIScene],
+  scene: [BootScene, PreloadScene, SurfaceScene, DiveScene, RestaurantScene, AquariumScene, UIScene],
 });
 
 // 仅开发模式：暴露全局状态给 e2e 断言

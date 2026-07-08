@@ -59,19 +59,23 @@ export class SurfaceScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.makeButton(150, '🤿 下潜', () => {
+    // 新增水族馆入口后按钮增至 6 个：间距压缩到 35 以塞进 360 高度
+    this.makeButton(145, '🤿 下潜', () => {
       this.openRegionPicker();
     });
-    this.makeButton(190, '🍜 晚间营业', () => {
+    this.makeButton(180, '🍜 晚间营业', () => {
       this.scene.start('Restaurant');
     });
-    this.makeButton(230, '🔧 装备升级', () => {
+    this.makeButton(215, '🐠 水族馆', () => {
+      this.scene.start('Aquarium');
+    });
+    this.makeButton(250, '🔧 装备升级', () => {
       this.openShop();
     });
-    this.makeButton(270, '🧪 生物合成', () => {
+    this.makeButton(285, '🧪 生物合成', () => {
       this.openCraft();
     });
-    this.makeButton(310, '📖 生物图鉴', () => {
+    this.makeButton(320, '📖 生物图鉴', () => {
       this.openCodex();
     });
   }

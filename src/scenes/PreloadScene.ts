@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { DataRegistry } from '../data/DataRegistry';
-import type { EquipmentDef, FishDef, GadgetDef, RecipeDef, RegionDef } from '../core/types';
+import type { DecorationDef, EquipmentDef, FishDef, GadgetDef, RecipeDef, RegionDef } from '../core/types';
 
 /**
  * 加载数据表与素材，生成程序占位纹理，初始化 DataRegistry。
@@ -30,6 +30,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.json('data_region_great_barrier_reef', 'assets/data/regions/great_barrier_reef.json');
     this.load.json('data_region_shipwreck', 'assets/data/regions/shipwreck.json');
     this.load.json('data_gadgets', 'assets/data/gadgets.json');
+    this.load.json('data_decorations', 'assets/data/decorations.json');
   }
 
   create(): void {
@@ -43,6 +44,7 @@ export class PreloadScene extends Phaser.Scene {
         this.cache.json.get('data_region_shipwreck') as RegionDef,
       ],
       gadgets: this.cache.json.get('data_gadgets') as GadgetDef[],
+      decorations: this.cache.json.get('data_decorations') as DecorationDef[],
     });
 
     this.makePlaceholders();

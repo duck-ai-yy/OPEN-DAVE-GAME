@@ -1,0 +1,7 @@
+[
+  { "id": "deco_seaweed", "name": "海草丛", "cost": 60, "ratingBonus": 3, "color": "#6ec87a" },
+  { "id": "deco_coral", "name": "珊瑚摆件", "cost": 80, "ratingBonus": 4, "color": "#f3a683" },
+  { "id": "deco_bubbler", "name": "气泡机", "cost": 150, "ratingBonus": 6, "color": "#8bd3dd" },
+  { "id": "deco_shipwreck", "name": "沉船模型", "cost": 300, "ratingBonus": 10, "color": "#9a8fa8" },
+  { "id": "deco_treasure", "name": "宝箱摆件", "cost": 500, "ratingBonus": 14, "color": "#ffd97d" }
+]

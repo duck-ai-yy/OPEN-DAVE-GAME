@@ -126,6 +126,25 @@ export interface RegionDef {
   unlockCost?: number;
 }
 
+/** 水族馆装饰品（decorations.json）。ratingBonus 直接加进评级得分 */
+export interface DecorationDef {
+  id: string;
+  name: string;
+  cost: number;
+  ratingBonus: number;
+  /** 占位色块颜色（正式素材接入前的展示用） */
+  color: string;
+}
+
+/** 水族馆持久化数据：展品按种类计数；装饰为已购 id 集合 */
+export interface AquariumSave {
+  /** fishId -> 展出条数 */
+  exhibits: Record<string, number>;
+  decorations: string[];
+  /** 上一次打烊结算的门票收入（进馆时展示「昨日门票收入」） */
+  lastTicketIncome: number;
+}
+
 // ---------- 存档 ----------
 
 export interface SaveData {
@@ -145,6 +164,8 @@ export interface SaveData {
   fragments: Record<string, number>;
   /** 保护动物好感度 fishId -> 值；旧档缺失时补 {} */
   affinity: Record<string, number>;
+  /** 水族馆经营数据；旧档缺失时由 SaveManager 补默认值 */
+  aquarium: AquariumSave;
 }
 
 /** 好感度满值：达到即成为同行伙伴 */

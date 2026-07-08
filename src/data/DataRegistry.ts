@@ -1,4 +1,4 @@
-import type { EquipmentDef, FishDef, GadgetDef, RecipeDef, RegionDef } from '../core/types';
+import type { DecorationDef, EquipmentDef, FishDef, GadgetDef, RecipeDef, RegionDef } from '../core/types';
 
 /**
  * 数据表注册中心。PreloadScene 加载 JSON 后调用 init()，
@@ -10,6 +10,7 @@ class DataRegistryImpl {
   private recipes = new Map<string, RecipeDef>();
   private regions = new Map<string, RegionDef>();
   private gadgets = new Map<string, GadgetDef>();
+  private decorations = new Map<string, DecorationDef>();
 
   init(data: {
     fish: FishDef[];
@@ -17,12 +18,14 @@ class DataRegistryImpl {
     recipes: RecipeDef[];
     regions: RegionDef[];
     gadgets?: GadgetDef[];
+    decorations?: DecorationDef[];
   }): void {
     this.fish = new Map(data.fish.map((f) => [f.id, f]));
     this.equipment = new Map(data.equipment.map((e) => [e.id, e]));
     this.recipes = new Map(data.recipes.map((r) => [r.id, r]));
     this.regions = new Map(data.regions.map((r) => [r.id, r]));
     this.gadgets = new Map((data.gadgets ?? []).map((g) => [g.id, g]));
+    this.decorations = new Map((data.decorations ?? []).map((d) => [d.id, d]));
     this.validate();
   }
 
@@ -96,6 +99,16 @@ class DataRegistryImpl {
 
   allGadgets(): GadgetDef[] {
     return [...this.gadgets.values()];
+  }
+
+  getDecoration(id: string): DecorationDef {
+    const def = this.decorations.get(id);
+    if (!def) throw new Error(`未知装饰 id: ${id}`);
+    return def;
+  }
+
+  allDecorations(): DecorationDef[] {
+    return [...this.decorations.values()];
   }
 }
 
